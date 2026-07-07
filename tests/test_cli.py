@@ -26,6 +26,7 @@ def test_cli_delegates_to_get_natural_earth(monkeypatch: pytest.MonkeyPatch) -> 
     assert result.exit_code == 0
     assert called["args"] == ("Cultural", "admin_0_countries", "50m")
 
+
 def test_cli_where_errors() -> None:
     """Ensure CLI where command returns without error."""
     runner = CliRunner()
@@ -36,6 +37,7 @@ def test_cli_where_errors() -> None:
 
     assert result.exit_code == 0
     assert result.exception is None
+
 
 def test_cli_where_output() -> None:
     """Ensure where command output is the same as get_cache_dir()."""

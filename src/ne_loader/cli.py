@@ -20,11 +20,13 @@ def cli_get_natural_earth(category: str, name: str, res: map_loader.Resolution) 
     """Download a Natural Earth dataset and load it into GeoPandas."""
     map_loader.get_natural_earth(category, name, res)
 
+
 @main.command("where")
 def cli_where_cache() -> None:
     """Locate the cache directory."""
     cache_dir = get_cache_dir()
     click.echo(cache_dir)
+
 
 @main.command("list")
 def cli_list_cached_files() -> None:
@@ -32,6 +34,7 @@ def cli_list_cached_files() -> None:
     cache_dir = get_cache_dir()
     sub_folders = [f.name for f in cache_dir.iterdir() if f.is_dir()]
     click.echo(", ".join(sub_folders))
+
 
 @main.command("rm")
 @click.argument("dataset", required=False)
@@ -56,8 +59,9 @@ def cli_remove_cached_file(dataset: str | None, all_: bool) -> None:
         return
 
     if not dataset:
-        raise click.UsageError("Specify a dataset name to remove or use --all to" \
-        "clear the whole cache.")
+        raise click.UsageError(
+            "Specify a dataset name to remove or use --all toclear the whole cache."
+        )
 
     dataset_dir = cache_dir / dataset
     if not dataset_dir.exists():
