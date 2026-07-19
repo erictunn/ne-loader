@@ -10,7 +10,7 @@ ne_loader = ["py.typed"]
 
 [project]
 name = "ne-loader"
-version = "0.4"
+version = "0.4.1"
 description = "A simple loader for Natural Earth map data."
 authors = [
     { name = "Eric Tunn", email = "erictunn@icloud.com" }
@@ -22,7 +22,7 @@ dependencies = [
     "geopandas>=0.12",
     "platformdirs>=4",
     "requests>=2.25",
-    "click>=8.4"
+    "click>=8.4",
 ]
 
 [project.urls]
