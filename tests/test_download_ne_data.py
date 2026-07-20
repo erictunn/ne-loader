@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 import requests
 
-from ne_loader.map_loader import build_ne_filename, download_ne_data, Resolution
+from ne_loader.map_loader import Resolution, build_ne_filename, download_ne_data
 
 
 def _mock_zip_bytes(name: str, res: str) -> bytes:

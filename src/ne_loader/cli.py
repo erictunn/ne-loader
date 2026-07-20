@@ -1,7 +1,8 @@
 """Provides basic command line functionality."""
 
-import click
 import shutil
+
+import click
 
 from . import map_loader
 from .cacher import get_cache_dir
@@ -60,7 +61,7 @@ def cli_remove_cached_file(dataset: str | None, all_: bool) -> None:
 
     if not dataset:
         raise click.UsageError(
-            "Specify a dataset name to remove or use --all toclear the whole cache."
+            "Specify a dataset name to remove or use --all to clear the whole cache."
         )
 
     dataset_dir = cache_dir / dataset

@@ -1,7 +1,8 @@
 """Basic tests for map_loader.py constructors."""
 
-from pathlib import Path
 import re
+from pathlib import Path
+
 import pytest
 
 from ne_loader.map_loader import (

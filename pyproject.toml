@@ -46,6 +46,9 @@ select = [
     "UP",
     "C4",
     "PTH",
+    "I",
+    "B",
+    "SIM",
 ]
 [tool.pyright]
 typeCheckingMode = "strict"

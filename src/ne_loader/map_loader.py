@@ -13,7 +13,6 @@ import requests
 from .cacher import PathLike, get_cache_dir
 from .error_handler import ErrorMode, error_handler, validate_error_mode
 
-
 fallback_logger: logging.Logger = logging.getLogger(__name__)
 
 Resolution = Literal["10m", "50m", "110m"]
