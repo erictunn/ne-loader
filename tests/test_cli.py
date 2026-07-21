@@ -53,20 +53,33 @@ def test_cli_where_output() -> None:
     assert true_cache_dir == str(result.output).strip()
 
 
-def test_cli_list_output() -> None:
-    """Tests list command output before and after adding a directory."""
-    runner = CliRunner()
-    result_a = runner.invoke(
-        cli.main,
-        ["list"],
-    )
-    cache_dir = get_cache_dir()
-    pathlib.Path(cache_dir / "test").mkdir(exist_ok=True)
+def test_cli_list_empty_output(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: pathlib.Path
+) -> None:
+    """List succeeds and prints an empty line when nothing is cached."""
+    monkeypatch.setattr(cli, "get_cache_dir", lambda: tmp_path)
 
-    result_b = runner.invoke(
-        cli.main,
-        ["list"],
-    )
-    assert "test" in result_b.output
-    assert result_a.exception is None
-    assert result_b.exception is None
+    runner = CliRunner()
+    result = runner.invoke(cli.main, ["list"])
+
+    assert result.exit_code == 0
+    assert result.exception is None
+    assert result.output == "\n"
+
+
+def test_cli_list_output(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: pathlib.Path
+) -> None:
+    """List includes cached directories and excludes other cache entries."""
+    monkeypatch.setattr(cli, "get_cache_dir", lambda: tmp_path)
+    (tmp_path / "countries").mkdir()
+    (tmp_path / "rivers").mkdir()
+    (tmp_path / "not-a-directory").touch()
+
+    result = CliRunner().invoke(cli.main, ["list"])
+
+    assert result.exit_code == 0
+    assert result.exception is None
+    listed_entries = result.output.strip().split(", ")
+    assert len(listed_entries) == 2
+    assert set(listed_entries) == {"countries", "rivers"}
