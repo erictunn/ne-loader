@@ -10,7 +10,7 @@ ne_loader = ["py.typed"]
 
 [project]
 name = "ne-loader"
-version = "0.4"
+version = "0.4.1"
 description = "A simple loader for Natural Earth map data."
 authors = [
     { name = "Eric Tunn", email = "erictunn@icloud.com" }
@@ -22,7 +22,7 @@ dependencies = [
     "geopandas>=0.12",
     "platformdirs>=4",
     "requests>=2.25",
-    "click>=8.4"
+    "click>=8.4",
 ]
 
 [project.urls]
@@ -31,9 +31,24 @@ Homepage = "https://github.com/erictunn/ne-loader"
 [project.scripts]
 ne-loader = "ne_loader.cli:main"
 
+[dependency-groups]
+dev = [
+    "mypy>=2.3.0",
+    "pytest>=9.1.1",
+]
+
 [tool.ruff.lint]
 select = [
     "E",
     "W",
     "D",
+    "F",
+    "UP",
+    "C4",
+    "PTH",
+    "I",
+    "B",
+    "SIM",
 ]
+[tool.pyright]
+typeCheckingMode = "strict"

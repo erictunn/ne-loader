@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 import requests
 
-from ne_loader.map_loader import build_ne_filename, download_ne_data, Resolution
+from ne_loader.map_loader import Resolution, build_ne_filename, download_ne_data
 
 
 def _mock_zip_bytes(name: str, res: str) -> bytes:
@@ -40,11 +40,11 @@ class MockResponse:
             yield self._data[start : start + chunk_size]
 
 
-
 url = "https://example.org/fake.zip"
 name = "admin_0_countries"
 res: Resolution = "10m"
 logger = logging.getLogger("testing")
+
 
 def test_download_ne_data_success(
     tmp_path: Path,
@@ -110,7 +110,6 @@ def test_download_ne_data_failure(
     extract_dir = base / build_ne_filename(name, res, suffix="")
     zip_path = base / build_ne_filename(name, res)
     shp_file = extract_dir / build_ne_filename(name, res, suffix=".shp")
-
 
     with pytest.raises(requests.exceptions.HTTPError):
         download_ne_data(
