@@ -34,6 +34,9 @@ result = map_loader.get_natural_earth(
 
 ## CLI
 
+The CLI executable is ne-loader.
+If you are using uv, write ```uv run``` before each command listed, if it otherwise does not work.
+
 ```bash
 ne-loader --help
 ```
