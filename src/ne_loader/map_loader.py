@@ -17,6 +17,8 @@ fallback_logger: logging.Logger = logging.getLogger(__name__)
 
 Resolution = Literal["10m", "50m", "110m"]
 
+Dataset_providers = {"naturalearth": "https://naciscdn.org/naturalearth/"}
+
 
 def build_ne_filename(name: str, res: str = "10m", suffix: str = ".zip") -> str:
     """Build a Natural Earth dataset filename."""
@@ -197,6 +199,75 @@ def download_ne_data(
             zip_path.unlink()
 
         expected_extract_dir = build_ne_filename(name, res, suffix="")
+        if not shp_file.exists() and extract_dir.name == expected_extract_dir:
+            shutil.rmtree(extract_dir, ignore_errors=True)
+
+
+def download_dataset(
+    source: str,
+    path: str,
+    *,
+    dir_override: PathLike,
+    error_mode: ErrorMode = "raise",
+    user_logger: logging.Logger | None = None,
+) -> None:
+    """Download, extract and cache a dataset.
+
+    Args:
+        source: The source of the dataset, e.g. natural earth or the IMF.
+        path: The path to the dataset within the source website.
+
+    Keyword Args:
+        dir_override: Optional cache directory override. This takes precedence over the
+            ``NATURAL_EARTH_CACHE_DIR`` environment variable.
+        error_mode: Error handling mode. Default is raise. Upon error:
+            ``"ignore"`` returns None (note: use with caution),
+            ``"raise"`` raises the error,
+            and ``"return"`` returns the exception object.
+        user_logger: Allow user to pass in their own logger to use instead of default.
+
+    """
+    logger = user_logger or fallback_logger
+    try:
+        validate_error_mode(error_mode)
+
+        website: str = Dataset_providers[source]
+        url = website + "/" + path
+        cache_dir: Path = get_cache_dir(path_override=dir_override)
+
+        response: requests.Response = requests.get(url, stream=True, timeout=10)
+        response.raise_for_status()
+
+        with zip_path.open("wb") as zip_file:
+            chunk: bytes
+            for chunk in response.iter_content(chunk_size=8192):
+                zip_file.write(chunk)
+
+        with zipfile.ZipFile(zip_path, "r") as zip_ref:
+            zip_ref.extractall(cache_dir)
+        return None
+
+    except requests.exceptions.HTTPError as error:
+        logger.error(
+            "ne-loader/download_ne_data(): "
+            "A HTTP error occurred while attempting to fetch data: %s\n"
+            "This may cause an error when attempting to load the data.",
+            error,
+        )
+        raise
+    except requests.exceptions.RequestException as error:
+        logger.error(
+            "ne-loader/download_ne_data(): "
+            "A request error occurred while attempting to fetch data: %s\n"
+            "This may cause an error when attempting to load the data.",
+            error,
+        )
+        raise
+    finally:
+        with contextlib.suppress(FileNotFoundError):
+            zip_path.unlink()
+
+        expected_extract_dir = None #TODO fix
         if not shp_file.exists() and extract_dir.name == expected_extract_dir:
             shutil.rmtree(extract_dir, ignore_errors=True)
 
