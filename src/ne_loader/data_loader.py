@@ -135,7 +135,7 @@ def download_dataset(
 
     Keyword Args:
         file_extension: If a file extension cannot be determined,
-            it will fall back to this. 
+            it will fall back to this.
         dir_override: Optional cache directory override. This takes precedence over the
             ``NATURAL_EARTH_CACHE_DIR`` environment variable.
         error_mode: Error handling mode. Default is raise. Upon error:
