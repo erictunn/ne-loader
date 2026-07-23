@@ -118,6 +118,42 @@ def _download_dataset(
             shutil.rmtree(extract_dir, ignore_errors=True)
 
 
+@overload
+def download_dataset(
+    source: str,
+    path: str,
+    *,
+    file_extension: str,
+    dir_override: PathLike | None = None,
+    error_mode: Literal["return"],
+    user_logger: logging.Logger | None = None,
+) -> Exception | None: ...
+
+
+@overload
+def download_dataset(
+    source: str,
+    path: str,
+    *,
+    file_extension: str,
+    dir_override: PathLike | None = None,
+    error_mode: Literal["raise", "ignore"] = "raise",
+    user_logger: logging.Logger | None = None,
+) -> None: ...
+
+
+@overload
+def download_dataset(
+    source: str,
+    path: str,
+    *,
+    file_extension: str,
+    dir_override: PathLike | None = None,
+    error_mode: ErrorMode,
+    user_logger: logging.Logger | None = None,
+) -> Exception | None: ...
+
+
 def download_dataset(
     source: str,
     path: str,
