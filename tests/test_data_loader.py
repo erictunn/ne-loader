@@ -16,6 +16,7 @@ from ne_loader.data_loader import (
     download_dataset,
 )
 
+url = "https://naciscdn.org/naturalearth/10m/finance/rates.zip"
 
 class MockResponse:
     """Mock successful response object for a requests.get call."""
@@ -118,8 +119,15 @@ def test_download_dataset_returns_error_and_cleans_up(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Return errors according to error_mode and remove partial artifacts."""
-    monkeypatch.setattr(requests, "get", lambda *args, **kwargs: BadResponse())
+    """Test download_dataset leaves no artifacts and respects error_mode."""
+    def mock_get(request_url: str, stream: bool, timeout: int) -> BadResponse:
+        """Return a fake response and verify the downloader's request options."""
+        assert request_url == url
+        assert stream is True
+        assert timeout == 10
+        return BadResponse()
+
+    monkeypatch.setattr(requests, "get", mock_get)
 
     result = download_dataset(
         "naturalearth",
