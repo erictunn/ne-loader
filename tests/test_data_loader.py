@@ -79,6 +79,33 @@ def test_download_dataset_downloads_and_extracts(
 
     assert not build_dataset_zip_path(tmp_path, "naturalearth", "rates").exists()
 
+
+def test_download_dataset_uses_cached_file(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Ensure already cached files are not downloaded."""
+    extract_dir = build_dataset_extract_dir(tmp_path, "naturalearth", "rates")
+    extracted = build_dataset_file_path("naturalearth", "rates", extract_dir, "json")
+    extracted.parent.mkdir(parents=True)
+    extracted.write_bytes(b"cached")
+
+    def unexpected_get(*args: object, **kwargs: object) -> MockResponse:
+        raise AssertionError("Cached datasets must not be downloaded")
+
+    monkeypatch.setattr(requests, "get", unexpected_get)
+
+    assert (
+        download_dataset(
+            "naturalearth",
+            "rates.zip",
+            file_extension=".json",
+            dir_override=tmp_path,
+        )
+        is None
+    )
+
+
 class BadResponse:
     """Mock unsuccessful response for a requests.get call."""
 
