@@ -205,3 +205,48 @@ def test_build_dataset_url_rejects_bad_paths(path: str) -> None:
         _build_dataset_url("https://naciscdn.org/naturalearth/", path)
 
 
+def test_get_dataset_returns_download_error(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A failed download must not be replaced by a later cache-miss error."""
+
+    def mock_get(
+        request_url: str,
+        stream: bool,
+        timeout: int,
+        allow_redirects: bool,
+    ) -> BadResponse:
+        """Return a fake response and verify the downloader's request options."""
+        assert request_url == url
+        assert stream is True
+        assert timeout == 10
+        assert allow_redirects is False
+        return BadResponse()
+
+    monkeypatch.setattr(requests, "get", mock_get)
+
+    result = get_dataset(
+        "naturalearth",
+        "10m/finance/rates.zip",
+        file_extension="json",
+        reader=lambda path: path.read_text(encoding="utf-8"),
+        dir_override=tmp_path,
+        error_mode="return",
+    )
+
+    assert isinstance(result, requests.exceptions.HTTPError)
+
+
+def test_fetch_dataset_rejects_unknown_source(tmp_path: Path) -> None:
+    """A cache reader cannot use an arbitrary source string as a local path."""
+    result = fetch_dataset(
+        "../outside-cache",
+        "rates.zip",
+        file_extension="json",
+        reader=lambda path: path.read_text(encoding="utf-8"),
+        dir_override=tmp_path,
+        error_mode="return",
+    )
+
+    assert isinstance(result, ValueError)
