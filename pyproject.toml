@@ -10,7 +10,7 @@ ne_loader = ["py.typed"]
 
 [project]
 name = "ne-loader"
-version = "0.4.1"
+version = "0.5"
 description = "A simple loader for Natural Earth map data."
 authors = [
     { name = "Eric Tunn", email = "erictunn@icloud.com" }
