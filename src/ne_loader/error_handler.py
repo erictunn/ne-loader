@@ -56,5 +56,5 @@ def validate_error_mode(error_mode: ErrorMode) -> None:
 
     """
     if error_mode not in ("ignore", "raise", "return"):
-        raise ValueError(f"Invalid error_mode: {error_mode!r}") # type: ignore
+        raise ValueError(f"Invalid error_mode: {error_mode!r}")  # type: ignore
         # Ignore because user may bypass type checkers and pass in a non-ErrorMode type

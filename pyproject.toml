@@ -34,8 +34,10 @@ ne-loader = "ne_loader.cli:main"
 
 [dependency-groups]
 dev = [
+    "bandit>=1.9.2",
     "mypy>=2.3.0",
     "pytest>=9.1.1",
+    "ruff>=0.12.0",
 ]
 
 [tool.ruff.lint]
