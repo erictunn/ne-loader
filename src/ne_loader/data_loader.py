@@ -359,3 +359,117 @@ def fetch_dataset(
     except Exception as error:
         logger.error("ne-loader/fetch_dataset(): error fetching data: %s", error)
         return error_handler(error, error_mode)
+
+
+@overload
+def get_dataset(
+    source: str,
+    path: str,
+    *,
+    file_extension: str,
+    reader: DatasetReader[T],
+    dir_override: PathLike | None = None,
+    error_mode: Literal["ignore"],
+    user_logger: logging.Logger | None = None,
+) -> T | None: ...
+
+
+@overload
+def get_dataset(
+    source: str,
+    path: str,
+    *,
+    file_extension: str,
+    reader: DatasetReader[T],
+    dir_override: PathLike | None = None,
+    error_mode: Literal["raise"] = "raise",
+    user_logger: logging.Logger | None = None,
+) -> T: ...
+
+
+@overload
+def get_dataset(
+    source: str,
+    path: str,
+    *,
+    file_extension: str,
+    reader: DatasetReader[T],
+    dir_override: PathLike | None = None,
+    error_mode: Literal["return"],
+    user_logger: logging.Logger | None = None,
+) -> T | Exception: ...
+
+
+@overload
+def get_dataset(
+    source: str,
+    path: str,
+    *,
+    file_extension: str,
+    reader: DatasetReader[T],
+    dir_override: PathLike | None = None,
+    error_mode: ErrorMode,
+    user_logger: logging.Logger | None = None,
+) -> T | Exception | None: ...
+
+
+def get_dataset(
+    source: str,
+    path: str,
+    *,
+    file_extension: str,
+    reader: DatasetReader[T],
+    dir_override: PathLike | None = None,
+    error_mode: ErrorMode = "raise",
+    user_logger: logging.Logger | None = None,
+) -> T | Exception | None:
+    """Call download_dataset and fetch_dataset.
+
+    Args:
+        source: The source of the dataset, e.g. Natural Earth or the IMF.
+        path: The path to the dataset within the source website. The final path
+            component is used to identify the dataset to download and fetch.
+
+    Keyword Args:
+        file_extension: The extension of the dataset file, with or
+            without a leading dot.
+        reader: A callable that receives the cached dataset path and returns
+            the parsed dataset.
+        dir_override: Optional cache directory override. This takes precedence
+            over the ``NATURAL_EARTH_CACHE_DIR`` environment variable.
+        error_mode: Error handling mode. Default is raise. Upon error:
+            ``"ignore"`` returns None (note: use with caution),
+            ``"raise"`` raises the error,
+            and ``"return"`` returns the exception object.
+        user_logger: Allow user to pass in their own logger to use instead of
+            default.
+
+    Returns:
+        The value returned by ``reader``. Depending on ``error_mode``, an error
+        may instead return None or the exception object.
+
+    """
+    logger = user_logger or fallback_logger
+    try:
+        download_result = download_dataset(
+            source,
+            path,
+            file_extension=file_extension,
+            dir_override=dir_override,
+            error_mode=error_mode,
+            user_logger=user_logger,
+        )
+        if isinstance(download_result, Exception):
+            return download_result
+        return fetch_dataset(
+            source,
+            path,
+            file_extension=file_extension,
+            reader=reader,
+            dir_override=dir_override,
+            error_mode=error_mode,
+            user_logger=user_logger,
+        )
+    except Exception as error:
+        logger.error("ne-loader/get_dataset(): error getting data: %s", error)
+        return error_handler(error, error_mode)
