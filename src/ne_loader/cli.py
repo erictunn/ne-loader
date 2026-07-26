@@ -33,6 +33,9 @@ def cli_where_cache() -> None:
 def cli_list_cached_files() -> None:
     """List all cached NE files within the cache dir."""
     cache_dir = get_cache_dir()
+    if not cache_dir.exists():
+        click.echo("")
+        return
     sub_folders = [f.name for f in cache_dir.iterdir() if f.is_dir()]
     click.echo(", ".join(sub_folders))
 
@@ -63,6 +66,8 @@ def cli_remove_cached_file(dataset: str | None, all_: bool) -> None:
         raise click.UsageError(
             "Specify a dataset name to remove or use --all to clear the whole cache."
         )
+    if dataset in {".", ".."} or "/" in dataset or "\\" in dataset:
+        raise click.UsageError("dataset must be the name of a cached dataset")
 
     dataset_dir = cache_dir / dataset
     if not dataset_dir.exists():

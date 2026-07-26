@@ -67,6 +67,19 @@ def test_cli_list_empty_output(
     assert result.output == "\n"
 
 
+def test_cli_list_missing_cache_output(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: pathlib.Path,
+) -> None:
+    """List succeeds before the cache directory has been created."""
+    monkeypatch.setattr(cli, "get_cache_dir", lambda: tmp_path / "missing-cache")
+
+    result = CliRunner().invoke(cli.main, ["list"])
+
+    assert result.exit_code == 0
+    assert result.output == "\n"
+
+
 def test_cli_list_output(
     monkeypatch: pytest.MonkeyPatch, tmp_path: pathlib.Path
 ) -> None:
