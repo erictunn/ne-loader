@@ -4,7 +4,9 @@ import contextlib
 import logging
 import shutil
 import zipfile
+from collections.abc import Callable
 from pathlib import Path
+from typing import Literal, TypeVar, overload
 from urllib.parse import urlsplit
 
 import requests
@@ -13,6 +15,8 @@ from .cacher import PathLike, get_cache_dir
 from .error_handler import ErrorMode, error_handler, validate_error_mode
 
 fallback_logger: logging.Logger = logging.getLogger(__name__)
+T = TypeVar("T")
+DatasetReader = Callable[[Path], T]
 
 dataset_providers: dict[str, str] = {
     "naturalearth": "https://naciscdn.org/naturalearth/",
@@ -222,3 +226,115 @@ def download_dataset(
             and not expected_file.exists()
         ):
             shutil.rmtree(extract_dir, ignore_errors=True)
+
+
+@overload
+def fetch_dataset(
+    source: str,
+    path: str,
+    *,
+    file_extension: str,
+    reader: DatasetReader[T],
+    dir_override: PathLike | None = None,
+    error_mode: Literal["ignore"],
+    user_logger: logging.Logger | None = None,
+) -> T | None: ...
+
+
+@overload
+def fetch_dataset(
+    source: str,
+    path: str,
+    *,
+    file_extension: str,
+    reader: DatasetReader[T],
+    dir_override: PathLike | None = None,
+    error_mode: Literal["raise"] = "raise",
+    user_logger: logging.Logger | None = None,
+) -> T: ...
+
+
+@overload
+def fetch_dataset(
+    source: str,
+    path: str,
+    *,
+    file_extension: str,
+    reader: DatasetReader[T],
+    dir_override: PathLike | None = None,
+    error_mode: Literal["return"],
+    user_logger: logging.Logger | None = None,
+) -> T | Exception: ...
+
+
+@overload
+def fetch_dataset(
+    source: str,
+    path: str,
+    *,
+    file_extension: str,
+    reader: DatasetReader[T],
+    dir_override: PathLike | None = None,
+    error_mode: ErrorMode,
+    user_logger: logging.Logger | None = None,
+) -> T | Exception | None: ...
+
+
+def fetch_dataset(
+    source: str,
+    path: str,
+    *,
+    file_extension: str,
+    reader: DatasetReader[T],
+    dir_override: PathLike | None = None,
+    error_mode: ErrorMode = "raise",
+    user_logger: logging.Logger | None = None,
+) -> T | Exception | None:
+    """Read a cached dataset with ``reader``; never download it.
+
+    The dataset must already have been downloaded and extracted into the cache.
+    The reader receives the cached file path and is responsible for parsing it
+    into the desired result type.
+
+    Args:
+        source: The source of the dataset, e.g. Natural Earth or the IMF.
+        path: The path to the dataset within the source website. The final path
+            component is used to identify the cached dataset.
+
+    Keyword Args:
+        file_extension: The extension of the cached dataset file, with or
+            without a leading dot.
+        reader: A callable that receives the cached dataset path and returns
+            the parsed dataset.
+        dir_override: Optional cache directory override. This takes precedence
+            over the ``NATURAL_EARTH_CACHE_DIR`` environment variable.
+        error_mode: Error handling mode. Default is raise. Upon error:
+            ``"ignore"`` returns None (note: use with caution),
+            ``"raise"`` raises the error,
+            and ``"return"`` returns the exception object.
+        user_logger: Allow user to pass in their own logger to use instead of
+            default.
+
+    Returns:
+        The value returned by ``reader``. Depending on ``error_mode``, an error
+        may instead return None or the exception object.
+
+    """
+    logger = user_logger or fallback_logger
+    try:
+        validate_error_mode(error_mode)
+        name = _dataset_name(path)
+        cache_dir = get_cache_dir(path_override=dir_override)
+        extract_dir = build_dataset_extract_dir(cache_dir, source, name)
+        cached_file = build_dataset_file_path(
+            source,
+            name,
+            extract_dir,
+            file_extension,
+        )
+        if not cached_file.exists():
+            raise FileNotFoundError(f"Dataset is not cached: {cached_file}")
+        return reader(cached_file)
+    except Exception as error:
+        logger.error("ne-loader/fetch_dataset(): error fetching data: %s", error)
+        return error_handler(error, error_mode)
