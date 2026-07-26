@@ -193,3 +193,15 @@ def test_fetch_dataset_returns_error_when_file_is_not_cached(tmp_path: Path) -> 
     )
 
     assert isinstance(result, FileNotFoundError)
+
+
+@pytest.mark.parametrize(
+    "path",
+    ["https://example.com/data.zip", "/data.zip", "../data.zip", "..\\data.zip"],
+)
+def test_build_dataset_url_rejects_bad_paths(path: str) -> None:
+    """Test url builder raises ValueError on bad paths."""
+    with pytest.raises(ValueError):
+        _build_dataset_url("https://naciscdn.org/naturalearth/", path)
+
+
