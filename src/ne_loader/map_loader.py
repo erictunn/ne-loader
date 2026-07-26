@@ -179,4 +179,5 @@ def validate_res(res: Resolution) -> None:
         raise ValueError(
             f"Invalid resolution: {res}.\n"
             'Resolution must be one of ("10m", "50m", "110m")'
-        )
+        )  # type: ignore
+        # Ignore because user may bypass type checkers and pass in a non-Resolution type
