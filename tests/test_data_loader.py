@@ -14,9 +14,11 @@ from ne_loader.data_loader import (
     build_dataset_file_path,
     build_dataset_zip_path,
     download_dataset,
+    fetch_dataset,
 )
 
 url = "https://naciscdn.org/naturalearth/10m/finance/rates.zip"
+
 
 class MockResponse:
     """Mock successful response object for a requests.get call."""
@@ -120,6 +122,7 @@ def test_download_dataset_returns_error_and_cleans_up(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test download_dataset leaves no artifacts and respects error_mode."""
+
     def mock_get(request_url: str, stream: bool, timeout: int) -> BadResponse:
         """Return a fake response and verify the downloader's request options."""
         assert request_url == url
@@ -131,7 +134,7 @@ def test_download_dataset_returns_error_and_cleans_up(
 
     result = download_dataset(
         "naturalearth",
-        "rates.zip",
+        "10m/finance/rates.zip",
         file_extension="json",
         dir_override=tmp_path,
         error_mode="return",
@@ -140,3 +143,39 @@ def test_download_dataset_returns_error_and_cleans_up(
     assert isinstance(result, requests.exceptions.HTTPError)
     assert not build_dataset_zip_path(tmp_path, "naturalearth", "rates").exists()
     assert not build_dataset_extract_dir(tmp_path, "naturalearth", "rates").exists()
+
+
+def test_fetch_dataset_reads_cached_file(tmp_path: Path) -> None:
+    """Fetch a cached file through a caller-provided typed reader."""
+    extract_dir = build_dataset_extract_dir(tmp_path, "naturalearth", "rates")
+    extracted = build_dataset_file_path("naturalearth", "rates", extract_dir, "json")
+    extracted.parent.mkdir(parents=True)
+    extracted.write_text("cached", encoding="utf-8")
+
+    def reader(path: Path) -> str:
+        return path.read_text(encoding="utf-8")
+
+    assert (
+        fetch_dataset(
+            "naturalearth",
+            "rates.zip",
+            file_extension="json",
+            reader=reader,
+            dir_override=tmp_path,
+        )
+        == "cached"
+    )
+
+
+def test_fetch_dataset_returns_error_when_file_is_not_cached(tmp_path: Path) -> None:
+    """Fetch does not download a missing dataset and supports return mode."""
+    result = fetch_dataset(
+        "naturalearth",
+        "rates.zip",
+        file_extension="json",
+        reader=lambda path: path.read_text(encoding="utf-8"),
+        dir_override=tmp_path,
+        error_mode="return",
+    )
+
+    assert isinstance(result, FileNotFoundError)
