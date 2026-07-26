@@ -96,3 +96,20 @@ def test_cli_list_output(
     listed_entries = result.output.strip().split(", ")
     assert len(listed_entries) == 2
     assert set(listed_entries) == {"countries", "rivers"}
+
+
+def test_cli_remove_rejects_paths_outside_cache(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: pathlib.Path,
+) -> None:
+    """The dataset argument must not be usable as a path outside the cache."""
+    cache_dir = tmp_path / "cache"
+    cache_dir.mkdir()
+    outside_dataset = tmp_path / "outside-dataset"
+    outside_dataset.mkdir()
+    monkeypatch.setattr(cli, "get_cache_dir", lambda: cache_dir)
+
+    result = CliRunner().invoke(cli.main, ["rm", "../outside-dataset"], input="y\n")
+
+    assert result.exit_code != 0
+    assert outside_dataset.exists()
