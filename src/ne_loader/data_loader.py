@@ -5,7 +5,7 @@ import logging
 import shutil
 import zipfile
 from collections.abc import Callable
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Literal, TypeVar, overload
 from urllib.parse import urlsplit
 
@@ -43,6 +43,25 @@ def _dataset_name(path: str) -> str:
     if not name:
         raise ValueError("path must identify a dataset")
     return name
+
+
+def _build_dataset_url(website: str, path: str) -> str:
+    """Build a URL confined to a configured dataset provider.
+
+    Dataset paths are deliberately relative: providers, rather than callers,
+    control the scheme and host used for requests.
+    """
+    parsed_path = urlsplit(path)
+    if (
+        parsed_path.scheme
+        or parsed_path.netloc
+        or path.startswith("/")
+        or "\\" in parsed_path.path
+    ):
+        raise ValueError("path must be relative to the configured dataset provider")
+    if any(part == ".." for part in PurePosixPath(parsed_path.path).parts):
+        raise ValueError("path must not contain parent-directory traversal")
+    return f"{website.rstrip('/')}/{path}"
 
 
 def _extract_archive(archive: zipfile.ZipFile, extract_dir: Path) -> None:
@@ -204,7 +223,7 @@ def download_dataset(
         extract_dir = build_dataset_extract_dir(cache_dir, source, name)
         expected_file = build_dataset_file_path(source, name, extract_dir, extension)
 
-        url = f"{website.rstrip('/')}/{path.lstrip('/')}"
+        url = _build_dataset_url(website, path)
         return _download_dataset(
             url=url,
             zip_path=zip_path,
