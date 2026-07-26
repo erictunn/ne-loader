@@ -23,6 +23,7 @@ dependencies = [
     "platformdirs>=4",
     "requests>=2.25",
     "click>=8.4",
+    "types-geopandas>=1.1.4.20260725",
 ]
 
 [project.urls]
