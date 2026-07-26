@@ -95,7 +95,7 @@ def _download_dataset(
 
     try:
         logger.info("ne-loader: Downloading %s...", log_name)
-        response = requests.get(url, stream=True, timeout=10)
+        response = requests.get(url, stream=True, timeout=10, allow_redirects=False)
         response.raise_for_status()
 
         zip_path.parent.mkdir(parents=True, exist_ok=True)
@@ -323,6 +323,8 @@ def fetch_dataset(
     logger = user_logger or fallback_logger
     try:
         validate_error_mode(error_mode)
+        if source not in dataset_providers:
+            raise ValueError(f"Unknown dataset source: {source!r}")
         name = _dataset_name(path)
         cache_dir = get_cache_dir(path_override=dir_override)
         extract_dir = build_dataset_extract_dir(cache_dir, source, name)
