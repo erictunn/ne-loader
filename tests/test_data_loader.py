@@ -10,11 +10,13 @@ import pytest
 import requests
 
 from ne_loader.data_loader import (
+    _build_dataset_url,
     build_dataset_extract_dir,
     build_dataset_file_path,
     build_dataset_zip_path,
     download_dataset,
     fetch_dataset,
+    get_dataset,
 )
 
 url = "https://naciscdn.org/naturalearth/10m/finance/rates.zip"
@@ -52,10 +54,16 @@ def test_download_dataset_downloads_and_extracts(
     response_data = _mock_zip_bytes("naturalearth_rates.json")
     requested: list[str] = []
 
-    def mock_get(url: str, stream: bool, timeout: int) -> MockResponse:
+    def mock_get(
+        url: str,
+        stream: bool,
+        timeout: int,
+        allow_redirects: bool,
+    ) -> MockResponse:
         requested.append(url)
         assert stream is True
         assert timeout == 10
+        assert allow_redirects is False
         return MockResponse(response_data)
 
     monkeypatch.setattr(requests, "get", mock_get)
@@ -123,11 +131,17 @@ def test_download_dataset_returns_error_and_cleans_up(
 ) -> None:
     """Test download_dataset leaves no artifacts and respects error_mode."""
 
-    def mock_get(request_url: str, stream: bool, timeout: int) -> BadResponse:
+    def mock_get(
+        request_url: str,
+        stream: bool,
+        timeout: int,
+        allow_redirects: bool,
+    ) -> BadResponse:
         """Return a fake response and verify the downloader's request options."""
         assert request_url == url
         assert stream is True
         assert timeout == 10
+        assert allow_redirects is False
         return BadResponse()
 
     monkeypatch.setattr(requests, "get", mock_get)
