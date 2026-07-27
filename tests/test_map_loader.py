@@ -56,4 +56,5 @@ def test_validate_res() -> None:
         'Invalid resolution: kaboom.\nResolution must be one of ("10m", "50m", "110m")'
     )
     with pytest.raises(ValueError, match=re.escape(expected_message)):
-        validate_res("kaboom")
+        validate_res("kaboom") # type: ignore
+    # Ignore as this should cause an error.

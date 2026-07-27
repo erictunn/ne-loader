@@ -14,7 +14,7 @@ def test_validate_error_mode_accepts_supported_modes() -> None:
 def test_validate_error_mode_rejects_unsupported_mode() -> None:
     """Tests that unsupported error modes raise a helpful error."""
     with pytest.raises(ValueError, match="Invalid error_mode: 'quiet'"):
-        validate_error_mode("quiet")
+        validate_error_mode("quiet")  # type: ignore
 
 
 def test_error_handler_ignores_error() -> None:
