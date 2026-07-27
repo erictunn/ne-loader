@@ -36,6 +36,7 @@ ne-loader = "ne_loader.cli:main"
 dev = [
     "bandit>=1.9.2",
     "mypy>=2.3.0",
+    "pre-commit>=4.3.0",
     "pytest>=9.1.1",
     "ruff>=0.12.0",
 ]
