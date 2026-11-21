@@ -212,6 +212,7 @@ def download_dataset(
     try:
         validate_error_mode(error_mode)
         try:
+            source = source.strip().lower()
             website = dataset_providers[source]
         except KeyError as error:
             raise ValueError(f"Unknown dataset source: {source!r}") from error
@@ -342,6 +343,7 @@ def fetch_dataset(
     logger = user_logger or fallback_logger
     try:
         validate_error_mode(error_mode)
+        source = source.strip().lower()
         if source not in dataset_providers:
             raise ValueError(f"Unknown dataset source: {source!r}")
         name = _dataset_name(path)
